@@ -1,0 +1,32 @@
+{
+  "target": "https://dev.example.com",
+  "auth": {
+    "type": "form",
+    "loginurl": "https://dev.example.com/login",
+    "username": "tester",
+    "password": "P@ssw0rd!",
+    "usernamefield": "user",
+    "passwordfield": "pass"
+  },
+  "include": ["/", "/account", "/search", "/api/"],
+  "exclude": ["/static/", "/assets/*", "/logout"],
+  "scan": {
+    "policies": ["xss", "sqli", "pathtraversal", "ssrf", "openredirect"],
+    "maxdurationminutes": 30,
+    "nondestructive": true
+  },
+  "tomcat": {
+    "checkheaders": true,
+    "checkdefaultapps": true,
+    "checktls": true
+  },
+  "report": {
+    "formats": ["json", "html"],
+    "outputdir": "artifacts"
+  },
+  "threshold": {
+    "failon": "High",
+    "maxhigh": 0,
+    "maxmedium": 3
+  }
+}
