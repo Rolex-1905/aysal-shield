@@ -1,7 +1,11 @@
 import click
+import json
 import logging
 from pythonjsonlogger import jsonlogger
 from securitytool.config import load_config
+from securitytool.tomcat.headerscheck import check_security_headers
+from securitytool.tomcat.baselinecheck import run_baseline_checks
+from securitytool.tomcat.webxmlcheck import run_webxml_checks
 
 def setup_logger():
     logger = logging.getLogger()
@@ -20,9 +24,10 @@ def setup_logger():
 @click.option("--threshold", default="High", help="Severity threshold for CI gate")
 @click.option("--non-destructive", is_flag=True, default=True, help="Enable safe mode")
 @click.option("--output-dir", default="artifacts", help="Output directory for reports")
-def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir):
+@click.option("--tomcat", "run_tomcat", is_flag=True, default=False, help="Run Tomcat hardening checks")
+def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat):
     """TomcatShield — Enterprise Web Application Security Automation Platform"""
-    
+
     logger = setup_logger()
     logger.info("TomcatShield starting", extra={"version": "1.0.0"})
 
@@ -36,7 +41,6 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
             logger.error(f"Failed to load config: {e}")
             raise SystemExit(1)
 
-    # CLI flags override config file values
     if target:
         config["target"] = target
     if "target" not in config:
@@ -49,6 +53,24 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
         "threshold": threshold,
         "non_destructive": non_destructive
     })
+
+    if run_tomcat:
+        target_url = config["target"]
+        logger.info("Starting Tomcat hardening checks", extra={"target": target_url})
+
+        headers_result = check_security_headers(target_url)
+        baseline_result = run_baseline_checks(target_url)
+        webxml_result = run_webxml_checks(target_url)
+
+        full_report = {
+            "tomcat_hardening": [
+                headers_result,
+                baseline_result,
+                webxml_result
+            ]
+        }
+
+        print(json.dumps(full_report, indent=2))
 
 if __name__ == "__main__":
     main()
