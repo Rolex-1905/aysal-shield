@@ -43,7 +43,7 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
                 proxies={"http": f"http://127.0.0.1:{ZAP_PORT}",
                          "https": f"http://127.0.0.1:{ZAP_PORT}"})
 
-    ready = wait_for_zap(zap)
+    ready = wait_for_zap(zap, retries=18, delay=10)
     if not ready:
         process.terminate()
         return {"error": "ZAP failed to start", "results": []}
