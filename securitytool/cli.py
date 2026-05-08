@@ -107,13 +107,35 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
                     "findings": normalized
                 }
             }
+
             from securitytool.reporting.jsonreport import save_json_report
+            from securitytool.ci.thresholds import check_thresholds
+
             saved_path = save_json_report(dast_report, output_dir)
             logger.info("DAST report saved", extra={
                 "path": saved_path,
                 "findings": len(normalized)
             })
+
+            threshold_result = check_thresholds(
+                findings=normalized,
+                fail_on=threshold,
+                max_high=0,
+                max_medium=-1
+            )
+
             print(json.dumps(dast_report, indent=2))
+
+            if not threshold_result["passed"]:
+                logger.error("Threshold breached - pipeline gate FAILED", extra={
+                    "breaches": threshold_result["breaches"],
+                    "counts": threshold_result["severity_counts"]
+                })
+                raise SystemExit(1)
+            else:
+                logger.info("Threshold check passed - pipeline gate OK", extra={
+                    "counts": threshold_result["severity_counts"]
+                })
 
 if __name__ == "__main__":
     main()

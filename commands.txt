@@ -1,0 +1,5 @@
+venv\Scripts\activate
+python -m securitytool.cli --target http://scanme.nmap.org --dast
+deactivate
+cd "C:\Program Files\ZAP\Zed Attack Proxy"
+.\zap.bat -daemon -port 8090 -config api.key=tomcatshield
