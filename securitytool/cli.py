@@ -71,8 +71,10 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
         }
 
         from securitytool.reporting.jsonreport import save_json_report
-        saved_path = save_json_report(full_report, output_dir)
-        logger.info("Report saved", extra={"path": saved_path})
+        from securitytool.reporting.htmlreport import save_html_report
+        saved_json = save_json_report(full_report, output_dir)
+        saved_html = save_html_report(full_report, output_dir)
+        logger.info("Reports saved", extra={"json": saved_json, "html": saved_html})
         print(json.dumps(full_report, indent=2))
 
 if __name__ == "__main__":
