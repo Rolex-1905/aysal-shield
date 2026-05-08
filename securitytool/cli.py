@@ -6,6 +6,8 @@ from securitytool.config import load_config
 from securitytool.tomcat.headerscheck import check_security_headers
 from securitytool.tomcat.baselinecheck import run_baseline_checks
 from securitytool.tomcat.webxmlcheck import run_webxml_checks
+from securitytool.dast.zaprunner import run_zap_scan
+from securitytool.dast.parsers import normalize_alerts
 
 def setup_logger():
     logger = logging.getLogger()
@@ -25,7 +27,8 @@ def setup_logger():
 @click.option("--non-destructive", is_flag=True, default=True, help="Enable safe mode")
 @click.option("--output-dir", default="artifacts", help="Output directory for reports")
 @click.option("--tomcat", "run_tomcat", is_flag=True, default=False, help="Run Tomcat hardening checks")
-def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat):
+@click.option("--dast", "run_dast", is_flag=True, default=False, help="Run DAST scan via ZAP")
+def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat, run_dast):
     """TomcatShield — Enterprise Web Application Security Automation Platform"""
 
     logger = setup_logger()
@@ -82,6 +85,35 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
             "csv": saved_csv
         })
         print(json.dumps(full_report, indent=2))
+
+    if run_dast:
+        target_url = config["target"]
+        logger.info("Starting DAST scan", extra={"target": target_url})
+
+        raw_results = run_zap_scan(
+            target=target_url,
+            non_destructive=non_destructive,
+            max_duration=30
+        )
+
+        if "error" in raw_results:
+            logger.error("DAST scan failed", extra={"error": raw_results["error"]})
+        else:
+            normalized = normalize_alerts(raw_results["results"])
+            dast_report = {
+                "dast_scan": {
+                    "target": target_url,
+                    "total_findings": len(normalized),
+                    "findings": normalized
+                }
+            }
+            from securitytool.reporting.jsonreport import save_json_report
+            saved_path = save_json_report(dast_report, output_dir)
+            logger.info("DAST report saved", extra={
+                "path": saved_path,
+                "findings": len(normalized)
+            })
+            print(json.dumps(dast_report, indent=2))
 
 if __name__ == "__main__":
     main()
