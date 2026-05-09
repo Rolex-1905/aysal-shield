@@ -65,6 +65,8 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
 
     full_report = {}
     dast_report = {}
+    threshold_result = None
+    raw_results = {}
 
     if run_tomcat:
         target_url = config["target"]
@@ -81,11 +83,6 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
                 webxml_result
             ]
         }
-
-        from securitytool.reporting.jsonreport import save_json_report
-        from securitytool.reporting.csvexport import save_csv_report
-        save_json_report(full_report, output_dir)
-        save_csv_report(full_report, output_dir)
         logger.info("Tomcat scan complete")
 
     if run_dast:
@@ -109,9 +106,6 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
                     "findings": normalized
                 }
             }
-
-            from securitytool.reporting.jsonreport import save_json_report
-            save_json_report(dast_report, output_dir)
             logger.info("DAST scan complete", extra={"findings": len(normalized)})
 
             from securitytool.ci.thresholds import check_thresholds
@@ -122,20 +116,30 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
                 max_medium=-1
             )
 
-    # Save unified HTML report
     if run_tomcat or run_dast:
         from securitytool.reporting.htmlreport import save_html_report
+        from securitytool.reporting.jsonreport import save_json_report
+        from securitytool.reporting.csvexport import save_csv_report
+
         unified = {
             "tomcat_hardening": full_report.get("tomcat_hardening", []),
             "dast_scan": dast_report.get("dast_scan", {})
         }
+
         saved_html = save_html_report(unified, output_dir)
-        logger.info("Unified HTML report saved", extra={"path": saved_html})
+        saved_json = save_json_report(unified, output_dir)
+        saved_csv = save_csv_report(unified, output_dir)
+
+        logger.info("Reports saved", extra={
+            "html": saved_html,
+            "json": saved_json,
+            "csv": saved_csv
+        })
 
         combined = {**full_report, **dast_report}
         print(json.dumps(combined, indent=2))
 
-    if run_dast and "error" not in raw_results:
+    if run_dast and "error" not in raw_results and threshold_result:
         if not threshold_result["passed"]:
             logger.error("Threshold breached - pipeline gate FAILED", extra={
                 "breaches": threshold_result["breaches"],
