@@ -4,3 +4,4 @@ python-json-logger
 requests
 jinja2
 python-owasp-zap-v2.4
+beautifulsoup4

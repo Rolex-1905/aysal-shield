@@ -1,0 +1,32 @@
+{
+  "target": "https://dev.example.com",
+  "auth": {
+    "type": "form",
+    "login_url": "https://dev.example.com/login",
+    "username": "${TEST_USER}",
+    "password": "${TEST_PASS}",
+    "username_field": "user",
+    "password_field": "pass"
+  },
+  "include": ["/", "/account", "/search", "/api/"],
+  "exclude": ["/static/", "/assets/*", "/logout"],
+  "scan": {
+    "policies": ["xss", "sqli", "path_traversal", "ssrf", "open_redirect"],
+    "max_duration_minutes": 60,
+    "non_destructive": false
+  },
+  "tomcat": {
+    "check_headers": true,
+    "check_default_apps": true,
+    "check_tls": true
+  },
+  "report": {
+    "formats": ["json", "html", "csv"],
+    "output_dir": "artifacts"
+  },
+  "threshold": {
+    "fail_on": "Medium",
+    "max_high": 0,
+    "max_medium": 0
+  }
+}
