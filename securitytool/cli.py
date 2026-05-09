@@ -32,6 +32,12 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
     """TomcatShield — Enterprise Web Application Security Automation Platform"""
 
     logger = setup_logger()
+
+    if not target and not config_path:
+        from securitytool.interactive import run_interactive
+        run_interactive()
+        return
+
     logger.info("TomcatShield starting", extra={"version": "1.0.0"})
 
     config = {}
@@ -57,6 +63,9 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
         "non_destructive": non_destructive
     })
 
+    full_report = {}
+    dast_report = {}
+
     if run_tomcat:
         target_url = config["target"]
         logger.info("Starting Tomcat hardening checks", extra={"target": target_url})
@@ -74,17 +83,10 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
         }
 
         from securitytool.reporting.jsonreport import save_json_report
-        from securitytool.reporting.htmlreport import save_html_report
         from securitytool.reporting.csvexport import save_csv_report
-        saved_json = save_json_report(full_report, output_dir)
-        saved_html = save_html_report(full_report, output_dir)
-        saved_csv = save_csv_report(full_report, output_dir)
-        logger.info("Reports saved", extra={
-            "json": saved_json,
-            "html": saved_html,
-            "csv": saved_csv
-        })
-        print(json.dumps(full_report, indent=2))
+        save_json_report(full_report, output_dir)
+        save_csv_report(full_report, output_dir)
+        logger.info("Tomcat scan complete")
 
     if run_dast:
         target_url = config["target"]
@@ -109,14 +111,10 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
             }
 
             from securitytool.reporting.jsonreport import save_json_report
+            save_json_report(dast_report, output_dir)
+            logger.info("DAST scan complete", extra={"findings": len(normalized)})
+
             from securitytool.ci.thresholds import check_thresholds
-
-            saved_path = save_json_report(dast_report, output_dir)
-            logger.info("DAST report saved", extra={
-                "path": saved_path,
-                "findings": len(normalized)
-            })
-
             threshold_result = check_thresholds(
                 findings=normalized,
                 fail_on=threshold,
@@ -124,18 +122,30 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
                 max_medium=-1
             )
 
-            print(json.dumps(dast_report, indent=2))
+    # Save unified HTML report
+    if run_tomcat or run_dast:
+        from securitytool.reporting.htmlreport import save_html_report
+        unified = {
+            "tomcat_hardening": full_report.get("tomcat_hardening", []),
+            "dast_scan": dast_report.get("dast_scan", {})
+        }
+        saved_html = save_html_report(unified, output_dir)
+        logger.info("Unified HTML report saved", extra={"path": saved_html})
 
-            if not threshold_result["passed"]:
-                logger.error("Threshold breached - pipeline gate FAILED", extra={
-                    "breaches": threshold_result["breaches"],
-                    "counts": threshold_result["severity_counts"]
-                })
-                raise SystemExit(1)
-            else:
-                logger.info("Threshold check passed - pipeline gate OK", extra={
-                    "counts": threshold_result["severity_counts"]
-                })
+        combined = {**full_report, **dast_report}
+        print(json.dumps(combined, indent=2))
+
+    if run_dast and "error" not in raw_results:
+        if not threshold_result["passed"]:
+            logger.error("Threshold breached - pipeline gate FAILED", extra={
+                "breaches": threshold_result["breaches"],
+                "counts": threshold_result["severity_counts"]
+            })
+            raise SystemExit(1)
+        else:
+            logger.info("Threshold check passed - pipeline gate OK", extra={
+                "counts": threshold_result["severity_counts"]
+            })
 
 if __name__ == "__main__":
     main()
