@@ -18,8 +18,9 @@ def start_zap():
          "-config", f"api.key={ZAP_API_KEY}",
          "-config", "api.addrs.addr.name=.*",
          "-config", "api.addrs.addr.regex=true"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd="C:\\Program Files\\ZAP\\Zed Attack Proxy"
     )
     return process
 
