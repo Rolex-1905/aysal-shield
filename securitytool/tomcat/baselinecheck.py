@@ -2,6 +2,48 @@ import requests
 import logging
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import ssl
+import socket
+
+def check_tls(target: str) -> dict:
+    if not target.startswith("https://"):
+        return {
+            "check": "TLS Configuration",
+            "status": "SKIP",
+            "evidence": "Target is not HTTPS — TLS check skipped"
+        }
+
+    try:
+        hostname = target.replace("https://", "").split("/")[0]
+        context = ssl.create_default_context()
+        
+        with socket.create_connection((hostname, 443), timeout=10) as sock:
+            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                tls_version = ssock.version()
+                cipher = ssock.cipher()
+                cert = ssock.getpeercert()
+
+                weak_versions = ["TLSv1", "TLSv1.1", "SSLv2", "SSLv3"]
+                is_weak = tls_version in weak_versions
+
+                return {
+                    "check": "TLS Configuration",
+                    "status": "FAIL" if is_weak else "PASS",
+                    "evidence": f"Protocol: {tls_version} | Cipher: {cipher[0]} | Strength: {cipher[2]} bits"
+                }
+
+    except ssl.SSLError as e:
+        return {
+            "check": "tls_configuration",
+            "status": "FAIL",
+            "evidence": f"SSL Error: {str(e)}"
+        }
+    except Exception as e:
+        return {
+            "check": "TLS Configuration",
+            "status": "ERROR",
+            "evidence": str(e)
+        }
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +114,7 @@ def run_baseline_checks(target: str) -> dict:
     results.extend(check_default_apps(target))
     results.append(check_trace_method(target))
     results.append(check_server_banner(target))
+    results.append(check_tls(target))
 
     for r in results:
         logger.info("Baseline check", extra=r)
