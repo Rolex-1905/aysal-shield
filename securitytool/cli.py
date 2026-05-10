@@ -94,7 +94,8 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
         raw_results = run_zap_scan(
             target=target_url,
             non_destructive=non_destructive,
-            max_duration=30
+            max_duration=30,
+            scan_mode=scan_mode
         )
 
         if "error" in raw_results:

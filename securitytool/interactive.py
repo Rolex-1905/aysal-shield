@@ -245,7 +245,8 @@ def run_interactive():
                     raw_results = run_zap_scan(
                         target=target,
                         non_destructive=non_destructive,
-                        max_duration=max_duration
+                        max_duration=max_duration,
+                        scan_mode=scan_mode
                     )
 
                 if "error" in raw_results:

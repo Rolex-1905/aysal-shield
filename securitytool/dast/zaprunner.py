@@ -53,7 +53,7 @@ def wait_for_zap(zap, retries=18, delay=10):
     return False
 
 
-def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30) -> dict:
+def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30, scan_mode: str = "quick") -> dict:
     start_zap_in_new_terminal()
 
     zap = ZAPv2(apikey=ZAP_API_KEY,
@@ -78,8 +78,10 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
 
         logger.info("Spider complete")
 
-        if not non_destructive:
+        if scan_mode == "deep" and not non_destructive:
             logger.info("Starting active scan", extra={"target": target})
+        elif scan_mode == "deep" and non_destructive:
+            logger.info("Deep mode requested but safe mode is ON — skipping active scan")
             scan_id = zap.ascan.scan(target)
 
             start_time = time.time()
