@@ -10,7 +10,21 @@ ZAP_PORT = 8090
 ZAP_API_KEY = "tomcatshield"
 
 
+def kill_existing_zap():
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/IM", "java.exe"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        time.sleep(3)
+        logger.info("Killed existing ZAP/Java process")
+    except Exception:
+        pass
+
+
 def start_zap():
+    kill_existing_zap()
     logger.info("Starting ZAP daemon", extra={"port": ZAP_PORT})
     process = subprocess.Popen(
         [ZAP_PATH, "-daemon",
@@ -40,11 +54,14 @@ def wait_for_zap(zap, retries=12, delay=10):
 
 def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30) -> dict:
     process = start_zap()
-    zap = ZAPv2(apikey=ZAP_API_KEY, 
+
+    zap = ZAPv2(apikey=ZAP_API_KEY,
                 proxies={"http": f"http://127.0.0.1:{ZAP_PORT}",
                          "https": f"http://127.0.0.1:{ZAP_PORT}"})
 
-    ready = wait_for_zap(zap, retries=18, delay=10)
+    logger.info("Waiting for ZAP to initialize...")
+    time.sleep(60)
+    ready = wait_for_zap(zap, retries=12, delay=10)
     if not ready:
         process.terminate()
         return {"error": "ZAP failed to start", "results": []}

@@ -12,15 +12,16 @@ console = Console()
 def print_banner():
     console.clear()
     banner = Text()
-    banner.append("████████╗ ██████╗ ███╗   ███╗ ██████╗ █████╗ ████████╗\n", style="bold red")
-    banner.append("╚══██╔══╝██╔═══██╗████╗ ████║██╔════╝██╔══██╗╚══██╔══╝\n", style="bold red")
-    banner.append("   ██║   ██║   ██║██╔████╔██║██║     ███████║   ██║   \n", style="bold red")
-    banner.append("   ██║   ██║   ██║██║╚██╔╝██║██║     ██╔══██║   ██║   \n", style="bold red")
-    banner.append("   ██║   ╚██████╔╝██║ ╚═╝ ██║╚██████╗██║  ██║   ██║   \n", style="bold red")
-    banner.append("   ╚═╝    ╚═════╝ ╚═╝     ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   \n", style="bold red")
-    banner.append("                    SHIELD\n", style="bold white")
-    banner.append("     Enterprise Web Application Security Platform\n", style="dim white")
-    banner.append("                     v1.0.0\n", style="dim white")
+    banner.append(" █████╗ ██╗   ██╗███████╗ █████╗ ██╗         ███████╗██╗  ██╗██╗███████╗██╗     ██████╗ \n", style="bold red")
+    banner.append("██╔══██╗╚██╗ ██╔╝██╔════╝██╔══██╗██║         ██╔════╝██║  ██║██║██╔════╝██║     ██╔══██╗\n", style="bold red")
+    banner.append("███████║ ╚████╔╝ ███████╗███████║██║         ███████╗███████║██║█████╗  ██║     ██║  ██║\n", style="bold red")
+    banner.append("██╔══██║  ╚██╔╝  ╚════██║██╔══██║██║         ╚════██║██╔══██║██║██╔══╝  ██║     ██║  ██║\n", style="bold red")
+    banner.append("██║  ██║   ██║   ███████║██║  ██║███████╗    ███████║██║  ██║██║███████╗███████╗██████╔╝\n", style="bold red")
+    banner.append("╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝    ╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═════╝ \n", style="bold red")
+    banner.append("                                        SHIELD\n", style="bold white")
+    banner.append("                     Enterprise Web Application Security Platform\n", style="dim white")
+    banner.append("                                         v1.0.0\n", style="dim white")
+    banner.append("                             Developed by Neeraj Mudunuru\n", style="bold cyan")
     console.print(Panel(banner, border_style="red", padding=(1, 4)))
 
 
@@ -147,7 +148,7 @@ def run_interactive():
                             choices=["0", "1", "2", "3", "4", "5"])
 
         if choice == "0":
-            console.print("\n[bold red]Exiting TomcatShield. Goodbye.[/bold red]\n")
+            console.print("\n[bold red]Exiting AYSAL Shield. Goodbye.[/bold red]\n")
             break
 
         elif choice == "5":
