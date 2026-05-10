@@ -28,7 +28,10 @@ def setup_logger():
 @click.option("--output-dir", default="artifacts", help="Output directory for reports")
 @click.option("--tomcat", "run_tomcat", is_flag=True, default=False, help="Run Tomcat hardening checks")
 @click.option("--dast", "run_dast", is_flag=True, default=False, help="Run DAST scan via ZAP")
-def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat, run_dast):
+@click.option("--include", "include_patterns", multiple=True, help="URL patterns to include in scan scope")
+@click.option("--exclude", "exclude_patterns", multiple=True, help="URL patterns to exclude from scan scope")
+
+def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat, run_dast, include_patterns, exclude_patterns):
     """TomcatShield — Enterprise Web Application Security Automation Platform"""
 
     logger = setup_logger()
@@ -95,7 +98,9 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
             target=target_url,
             non_destructive=non_destructive,
             max_duration=30,
-            scan_mode=scan_mode
+            scan_mode=scan_mode,
+            include_patterns=config.get("include", None),
+            exclude_patterns=config.get("exclude", None)
         )
 
         if "error" in raw_results:

@@ -53,7 +53,10 @@ def wait_for_zap(zap, retries=18, delay=10):
     return False
 
 
-def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30, scan_mode: str = "quick") -> dict:
+def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30,
+                 scan_mode: str = "quick", include_patterns: list = None,
+                 exclude_patterns: list = None) -> dict:
+
     start_zap_in_new_terminal()
 
     zap = ZAPv2(apikey=ZAP_API_KEY,
@@ -68,8 +71,27 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
         }
 
     try:
+        # Set up scan context
+        context_name = "tomcatshield_context"
+        context_id = zap.context.new_context(context_name)
+        logger.info("Created ZAP context", extra={"context_id": context_id})
+
+        # Include patterns
+        if include_patterns:
+            for pattern in include_patterns:
+                zap.context.include_in_context(context_name, pattern)
+                logger.info("Include pattern added", extra={"pattern": pattern})
+        else:
+            zap.context.include_in_context(context_name, f"{target}.*")
+
+        # Exclude patterns
+        if exclude_patterns:
+            for pattern in exclude_patterns:
+                zap.context.exclude_from_context(context_name, pattern)
+                logger.info("Exclude pattern added", extra={"pattern": pattern})
+
         logger.info("Starting spider", extra={"target": target})
-        scan_id = zap.spider.scan(target)
+        scan_id = zap.spider.scan(target, contextname=context_name)
         time.sleep(2)
 
         while int(zap.spider.status(scan_id)) < 100:
@@ -80,9 +102,7 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
 
         if scan_mode == "deep" and not non_destructive:
             logger.info("Starting active scan", extra={"target": target})
-        elif scan_mode == "deep" and non_destructive:
-            logger.info("Deep mode requested but safe mode is ON — skipping active scan")
-            scan_id = zap.ascan.scan(target)
+            scan_id = zap.ascan.scan(target, contextid=context_id)
 
             start_time = time.time()
             while int(zap.ascan.status(scan_id)) < 100:
@@ -93,6 +113,9 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
                     break
                 logger.info("Active scan progress", extra={"progress": zap.ascan.status(scan_id)})
                 time.sleep(10)
+
+        elif scan_mode == "deep" and non_destructive:
+            logger.info("Deep mode requested but safe mode is ON — skipping active scan")
 
         alerts = zap.core.alerts(baseurl=target)
         logger.info("Scan complete", extra={"alerts": len(alerts)})
