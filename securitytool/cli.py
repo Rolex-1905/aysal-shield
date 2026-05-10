@@ -126,18 +126,22 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
             "dast_scan": dast_report.get("dast_scan", {})
         }
 
-        saved_html = save_html_report(unified, output_dir)
-        saved_json = save_json_report(unified, output_dir)
-        saved_csv = save_csv_report(unified, output_dir)
+        has_tomcat = len(unified["tomcat_hardening"]) > 0
+        has_dast = len(unified["dast_scan"].get("findings", [])) > 0
 
-        logger.info("Reports saved", extra={
-            "html": saved_html,
-            "json": saved_json,
-            "csv": saved_csv
-        })
-
-        combined = {**full_report, **dast_report}
-        print(json.dumps(combined, indent=2))
+        if has_tomcat or has_dast:
+            saved_html = save_html_report(unified, output_dir)
+            saved_json = save_json_report(unified, output_dir)
+            saved_csv = save_csv_report(unified, output_dir)
+            logger.info("Reports saved", extra={
+                "html": saved_html,
+                "json": saved_json,
+                "csv": saved_csv
+            })
+            combined = {**full_report, **dast_report}
+            print(json.dumps(combined, indent=2))
+        else:
+            logger.warning("No scan results to save - skipping report generation")
 
     if run_dast and "error" not in raw_results and threshold_result:
         if not threshold_result["passed"]:

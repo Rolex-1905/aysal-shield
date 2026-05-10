@@ -1,6 +1,7 @@
 import subprocess
 import time
 import logging
+import os
 from zapv2 import ZAPv2
 
 logger = logging.getLogger(__name__)
@@ -8,6 +9,7 @@ logger = logging.getLogger(__name__)
 ZAP_PATH = "C:\\Program Files\\ZAP\\Zed Attack Proxy\\zap.bat"
 ZAP_PORT = 8090
 ZAP_API_KEY = "tomcatshield"
+ZAP_HOME = "C:\\Users\\lenovo\\ZAP"
 
 
 def kill_existing_zap():
@@ -23,8 +25,21 @@ def kill_existing_zap():
         pass
 
 
+def delete_zap_lock():
+    lock_file = os.path.join(ZAP_HOME, ".homelock")
+    try:
+        if os.path.exists(lock_file):
+            os.remove(lock_file)
+            logger.info("Deleted ZAP home lock file")
+        else:
+            logger.info("No ZAP lock file found")
+    except Exception as e:
+        logger.warning(f"Could not delete lock file: {e}")
+
+
 def start_zap():
     kill_existing_zap()
+    delete_zap_lock()
     logger.info("Starting ZAP daemon", extra={"port": ZAP_PORT})
     process = subprocess.Popen(
         [ZAP_PATH, "-daemon",
@@ -60,7 +75,7 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
                          "https": f"http://127.0.0.1:{ZAP_PORT}"})
 
     logger.info("Waiting for ZAP to initialize...")
-    time.sleep(60)
+    time.sleep(90)
     ready = wait_for_zap(zap, retries=12, delay=10)
     if not ready:
         process.terminate()
