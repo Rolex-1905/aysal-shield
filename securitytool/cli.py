@@ -34,6 +34,8 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
     logger = setup_logger()
 
     if not target and not config_path:
+        import logging
+        logging.disable(logging.CRITICAL)
         from securitytool.interactive import run_interactive
         run_interactive()
         return
