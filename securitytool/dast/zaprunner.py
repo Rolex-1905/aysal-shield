@@ -12,49 +12,28 @@ ZAP_API_KEY = "tomcatshield"
 ZAP_HOME = "C:\\Users\\lenovo\\ZAP"
 
 
-def kill_existing_zap():
-    try:
-        subprocess.run(
-            ["taskkill", "/F", "/IM", "java.exe"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-        time.sleep(3)
-        logger.info("Killed existing ZAP/Java process")
-    except Exception:
-        pass
-
-
 def delete_zap_lock():
     lock_file = os.path.join(ZAP_HOME, ".homelock")
     try:
         if os.path.exists(lock_file):
             os.remove(lock_file)
             logger.info("Deleted ZAP home lock file")
-        else:
-            logger.info("No ZAP lock file found")
     except Exception as e:
         logger.warning(f"Could not delete lock file: {e}")
 
 
 def start_zap():
-    kill_existing_zap()
     delete_zap_lock()
-    logger.info("Starting ZAP daemon", extra={"port": ZAP_PORT})
-    process = subprocess.Popen(
-        [ZAP_PATH, "-daemon",
-         "-port", str(ZAP_PORT),
-         "-config", f"api.key={ZAP_API_KEY}",
-         "-config", "api.addrs.addr.name=.*",
-         "-config", "api.addrs.addr.regex=true"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd="C:\\Program Files\\ZAP\\Zed Attack Proxy"
+    logger.info("Starting ZAP in new terminal window", extra={"port": ZAP_PORT})
+
+    # Opens ZAP in a NEW visible terminal window
+    subprocess.Popen(
+        f'start cmd /k "cd /d \\"C:\\Program Files\\ZAP\\Zed Attack Proxy\\" && java -Xmx512m -jar zap-2.17.0.jar -daemon -port {ZAP_PORT} -config api.key={ZAP_API_KEY}"',
+        shell=True
     )
-    return process
 
 
-def wait_for_zap(zap, retries=12, delay=10):
+def wait_for_zap(zap, retries=18, delay=10):
     logger.info("Waiting for ZAP to be ready...")
     for i in range(retries):
         try:
@@ -68,18 +47,18 @@ def wait_for_zap(zap, retries=12, delay=10):
 
 
 def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30) -> dict:
-    process = start_zap()
+    start_zap()
 
     zap = ZAPv2(apikey=ZAP_API_KEY,
                 proxies={"http": f"http://127.0.0.1:{ZAP_PORT}",
                          "https": f"http://127.0.0.1:{ZAP_PORT}"})
 
-    logger.info("Waiting for ZAP to initialize...")
-    time.sleep(90)
-    ready = wait_for_zap(zap, retries=12, delay=10)
+    ready = wait_for_zap(zap, retries=18, delay=10)
     if not ready:
-        process.terminate()
-        return {"error": "ZAP failed to start", "results": []}
+        return {
+            "error": "ZAP failed to start. Check the ZAP terminal window for errors.",
+            "results": []
+        }
 
     try:
         logger.info("Starting spider", extra={"target": target})
@@ -120,5 +99,3 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
             zap.core.shutdown()
         except Exception:
             pass
-        time.sleep(2)
-        process.terminate()
