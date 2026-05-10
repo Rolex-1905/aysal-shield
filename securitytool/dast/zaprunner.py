@@ -6,7 +6,6 @@ from zapv2 import ZAPv2
 
 logger = logging.getLogger(__name__)
 
-ZAP_PATH = "C:\\Program Files\\ZAP\\Zed Attack Proxy\\zap.bat"
 ZAP_PORT = 8090
 ZAP_API_KEY = "tomcatshield"
 ZAP_HOME = "C:\\Users\\lenovo\\ZAP"
@@ -22,15 +21,23 @@ def delete_zap_lock():
         logger.warning(f"Could not delete lock file: {e}")
 
 
-def start_zap():
+def start_zap_in_new_terminal():
     delete_zap_lock()
-    logger.info("Starting ZAP in new terminal window", extra={"port": ZAP_PORT})
 
-    # Opens ZAP in a NEW visible terminal window
-    subprocess.Popen(
-        f'start cmd /k "cd /d \\"C:\\Program Files\\ZAP\\Zed Attack Proxy\\" && java -Xmx512m -jar zap-2.17.0.jar -daemon -port {ZAP_PORT} -config api.key={ZAP_API_KEY}"',
-        shell=True
+    bat_content = (
+        '@echo off\n'
+        'echo Starting ZAP for TomcatShield...\n'
+        'cd /d "C:\\Program Files\\ZAP\\Zed Attack Proxy"\n'
+        f'java -Xmx512m -jar zap-2.17.0.jar -daemon -port {ZAP_PORT} -config api.key={ZAP_API_KEY}\n'
+        'pause\n'
     )
+
+    bat_path = os.path.join(os.environ.get("TEMP", "C:\\Temp"), "run_zap.bat")
+    with open(bat_path, "w") as f:
+        f.write(bat_content)
+
+    subprocess.Popen(f'start cmd /k "{bat_path}"', shell=True)
+    logger.info("ZAP started in new terminal window — waiting for it to be ready")
 
 
 def wait_for_zap(zap, retries=18, delay=10):
@@ -47,7 +54,7 @@ def wait_for_zap(zap, retries=18, delay=10):
 
 
 def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30) -> dict:
-    start_zap()
+    start_zap_in_new_terminal()
 
     zap = ZAPv2(apikey=ZAP_API_KEY,
                 proxies={"http": f"http://127.0.0.1:{ZAP_PORT}",
@@ -56,7 +63,7 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
     ready = wait_for_zap(zap, retries=18, delay=10)
     if not ready:
         return {
-            "error": "ZAP failed to start. Check the ZAP terminal window for errors.",
+            "error": "ZAP failed to start. Check the ZAP terminal window.",
             "results": []
         }
 

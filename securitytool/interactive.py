@@ -110,6 +110,27 @@ def display_dast_results(report: dict):
     console.print(table)
 
 
+def save_reports(unified: dict, output_dir: str, selected_formats: list):
+    from securitytool.reporting.jsonreport import save_json_report
+    from securitytool.reporting.htmlreport import save_html_report
+    from securitytool.reporting.csvexport import save_csv_report
+
+    saved = []
+    if "json" in selected_formats:
+        path = save_json_report(unified, output_dir)
+        saved.append(f"[dim]JSON: {path}[/dim]")
+    if "html" in selected_formats:
+        path = save_html_report(unified, output_dir)
+        saved.append(f"[dim]HTML: {path}[/dim]")
+    if "csv" in selected_formats:
+        path = save_csv_report(unified, output_dir)
+        saved.append(f"[dim]CSV: {path}[/dim]")
+
+    console.print("\n[bold green]Reports saved:[/bold green]")
+    for s in saved:
+        console.print(s)
+
+
 def view_last_report(output_dir: str = "artifacts"):
     if not os.path.exists(output_dir):
         console.print("[yellow]No artifacts directory found. Run a scan first.[/yellow]")
@@ -178,21 +199,32 @@ def run_interactive():
             else:
                 max_duration = 30
 
+            report_formats_input = Prompt.ask(
+                "Report formats",
+                choices=["html", "json", "csv", "all"],
+                default="all"
+            )
+            if report_formats_input == "all":
+                selected_formats = ["html", "json", "csv"]
+            else:
+                selected_formats = [report_formats_input]
+
             console.print(f"\n[dim]Target: {target}[/dim]")
-            console.print(f"[dim]Mode: {scan_mode} | Threshold: {threshold} | Safe mode: {non_destructive}[/dim]\n")
+            console.print(f"[dim]Mode: {scan_mode} | Threshold: {threshold} | Safe mode: {non_destructive}[/dim]")
+            console.print(f"[dim]Report formats: {', '.join(selected_formats)}[/dim]\n")
 
             confirm = Confirm.ask("Start scan?", default=True)
             if not confirm:
                 Prompt.ask("\nPress Enter to continue")
                 continue
 
+            full_report = {}
+            dast_report = {}
+
             if choice in ["1", "3"]:
                 from securitytool.tomcat.headerscheck import check_security_headers
                 from securitytool.tomcat.baselinecheck import run_baseline_checks
                 from securitytool.tomcat.webxmlcheck import run_webxml_checks
-                from securitytool.reporting.jsonreport import save_json_report
-                from securitytool.reporting.htmlreport import save_html_report
-                from securitytool.reporting.csvexport import save_csv_report
 
                 with console.status("[bold green]Running Tomcat hardening checks...[/bold green]"):
                     headers_result = check_security_headers(target)
@@ -202,16 +234,11 @@ def run_interactive():
                 full_report = {
                     "tomcat_hardening": [headers_result, baseline_result, webxml_result]
                 }
-
-                save_json_report(full_report, output_dir)
-                save_html_report(full_report, output_dir)
-                save_csv_report(full_report, output_dir)
                 display_tomcat_results(full_report)
 
             if choice in ["2", "3"]:
                 from securitytool.dast.zaprunner import run_zap_scan
                 from securitytool.dast.parsers import normalize_alerts
-                from securitytool.reporting.jsonreport import save_json_report
                 from securitytool.ci.thresholds import check_thresholds
 
                 with console.status("[bold red]Running DAST scan via ZAP...[/bold red]"):
@@ -232,7 +259,6 @@ def run_interactive():
                             "findings": normalized
                         }
                     }
-                    save_json_report(dast_report, output_dir)
                     display_dast_results(dast_report)
 
                     threshold_result = check_thresholds(normalized, fail_on=threshold)
@@ -242,6 +268,21 @@ def run_interactive():
                             console.print(f"[red]  • {breach}[/red]")
                     else:
                         console.print(f"\n[bold green]✓ Threshold check passed — Pipeline gate OK[/bold green]")
+
+            unified = {
+                "tomcat_hardening": full_report.get("tomcat_hardening", []),
+                "dast_scan": dast_report.get("dast_scan", {})
+            }
+
+            has_data = (
+                len(unified["tomcat_hardening"]) > 0 or
+                len(unified["dast_scan"].get("findings", [])) > 0
+            )
+
+            if has_data:
+                save_reports(unified, output_dir, selected_formats)
+            else:
+                console.print("[yellow]No scan results to save.[/yellow]")
 
             Prompt.ask("\nPress Enter to continue")
 
