@@ -53,9 +53,52 @@ def wait_for_zap(zap, retries=18, delay=10):
     return False
 
 
+def setup_form_auth(zap, context_id: str, context_name: str, target: str, auth_config: dict):
+    try:
+        login_url = auth_config.get("login_url", f"{target}/login")
+        username = os.environ.get("TEST_USER", auth_config.get("username", ""))
+        password = os.environ.get("TEST_PASS", auth_config.get("password", ""))
+        username_field = auth_config.get("username_field", "username")
+        password_field = auth_config.get("password_field", "password")
+
+        # Set form-based authentication
+        auth_method_config = (
+            f"loginUrl={login_url}&"
+            f"loginRequestData={username_field}%3D%7B%25username%25%7D%26"
+            f"{password_field}%3D%7B%25password%25%7D"
+        )
+
+        zap.authentication.set_authentication_method(
+            context_id,
+            "formBasedAuthentication",
+            auth_method_config
+        )
+
+        # Create user
+        user_id = zap.users.new_user(context_id, "test_user")
+        zap.users.set_authentication_credentials(
+            context_id,
+            user_id,
+            f"username={username}&password={password}"
+        )
+        zap.users.set_user_enabled(context_id, user_id, True)
+        zap.forcedUser.set_forced_user(context_id, user_id)
+        zap.forcedUser.set_forced_user_mode_enabled(True)
+
+        logger.info("Form-based auth configured", extra={
+            "login_url": login_url,
+            "username_field": username_field
+        })
+
+        return user_id
+
+    except Exception as e:
+        logger.error("Auth setup failed", extra={"error": str(e)})
+        return None
+
 def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 30,
                  scan_mode: str = "quick", include_patterns: list = None,
-                 exclude_patterns: list = None) -> dict:
+                 exclude_patterns: list = None, auth_config: dict = None) -> dict:
 
     start_zap_in_new_terminal()
 

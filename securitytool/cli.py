@@ -99,8 +99,9 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
             non_destructive=non_destructive,
             max_duration=30,
             scan_mode=scan_mode,
-            include_patterns=config.get("include", None),
-            exclude_patterns=config.get("exclude", None)
+            include_patterns=list(include_patterns) if include_patterns else config.get("include", None),
+            exclude_patterns=list(exclude_patterns) if exclude_patterns else config.get("exclude", None),
+            auth_config=config.get("auth", None)
         )
 
         if "error" in raw_results:
