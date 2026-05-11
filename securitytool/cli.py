@@ -30,8 +30,9 @@ def setup_logger():
 @click.option("--dast", "run_dast", is_flag=True, default=False, help="Run DAST scan via ZAP")
 @click.option("--include", "include_patterns", multiple=True, help="URL patterns to include in scan scope")
 @click.option("--exclude", "exclude_patterns", multiple=True, help="URL patterns to exclude from scan scope")
+@click.option("--discover", "run_discover", is_flag=True, default=False, help="Run discovery crawl and endpoint inventory")
 
-def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat, run_dast, include_patterns, exclude_patterns):
+def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat, run_dast, include_patterns, exclude_patterns, run_discover):
     """TomcatShield — Enterprise Web Application Security Automation Platform"""
 
     logger = setup_logger()
@@ -89,6 +90,28 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
             ]
         }
         logger.info("Tomcat scan complete")
+
+    if run_discover:
+        from securitytool.discovery.crawler import crawl_unauthenticated, crawl_authenticated
+        from securitytool.discovery.inventory import build_inventory, save_inventory
+
+        target_url = config["target"]
+        logger.info("Starting discovery crawl", extra={"target": target_url})
+
+        auth_config = config.get("auth", None)
+        if auth_config and auth_config.get("type") == "form":
+            endpoints = crawl_authenticated(target_url, auth_config)
+        else:
+            endpoints = crawl_unauthenticated(target_url)
+
+        inventory = build_inventory(endpoints)
+        saved_path = save_inventory(inventory, output_dir)
+
+        logger.info("Discovery complete", extra={
+            "total_endpoints": inventory["total"],
+            "forms_found": inventory["forms_found"],
+            "path": saved_path
+        })
 
     if run_dast:
         target_url = config["target"]
