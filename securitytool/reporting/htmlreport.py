@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from jinja2 import Template
+from securitytool.utils import redact_dict, redact_list
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -200,8 +201,8 @@ def save_html_report(data: dict, output_dir: str = "artifacts") -> str:
     filename = f"security_report_{timestamp}.html"
     filepath = os.path.join(output_dir, filename)
 
-    modules = data.get("tomcat_hardening", [])
-    raw_findings = data.get("dast_scan", {}).get("findings", [])
+    modules = redact_dict({"modules": data.get("tomcat_hardening", [])})["modules"]
+    raw_findings = redact_list(data.get("dast_scan", {}).get("findings", []))
 
     grouped = group_findings(raw_findings) if raw_findings else []
     risk = calculate_risk_score(raw_findings) if raw_findings else None

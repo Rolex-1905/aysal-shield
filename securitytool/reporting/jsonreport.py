@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from securitytool.utils import redact_dict
 
 def save_json_report(data: dict, output_dir: str = "artifacts") -> str:
     os.makedirs(output_dir, exist_ok=True)
@@ -18,10 +19,10 @@ def save_json_report(data: dict, output_dir: str = "artifacts") -> str:
     filepath = os.path.join(output_dir, filename)
 
     report = {
-        "tool": "TomcatShield",
+        "tool": "AYSAL Shield",
         "version": "1.0.0",
         "generated_at": datetime.now().isoformat(),
-        "report": data
+        "report": redact_dict(data)
     }
 
     with open(filepath, "w") as f:
