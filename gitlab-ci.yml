@@ -1,0 +1,66 @@
+stages:
+  - security
+
+variables:
+  TARGET_URL: "https://dev.example.com"
+
+tomcat-hardening:
+  stage: security
+  image: python:3.12
+  before_script:
+    - pip install -r requirements.txt
+  script:
+    - python -m securitytool.cli
+      --target $TARGET_URL
+      --tomcat
+      --output-dir artifacts
+  artifacts:
+    paths:
+      - artifacts/
+    expire_in: 30 days
+  allow_failure: true
+
+dast-scan:
+  stage: security
+  image: python:3.12
+  before_script:
+    - apt-get update && apt-get install -y default-jre
+    - pip install -r requirements.txt
+  script:
+    - python -m securitytool.cli
+      --target $TARGET_URL
+      --dast
+      --scan-mode quick
+      --threshold High
+      --output-dir artifacts
+  artifacts:
+    paths:
+      - artifacts/
+    expire_in: 30 days
+  variables:
+    TEST_USER: $TEST_USER
+    TEST_PASS: $TEST_PASS
+
+full-scan-nightly:
+  stage: security
+  image: python:3.12
+  before_script:
+    - apt-get update && apt-get install -y default-jre
+    - pip install -r requirements.txt
+  script:
+    - python -m securitytool.cli
+      --target $TARGET_URL
+      --tomcat
+      --dast
+      --scan-mode deep
+      --threshold High
+      --output-dir artifacts
+  artifacts:
+    paths:
+      - artifacts/
+    expire_in: 30 days
+  only:
+    - schedules
+  variables:
+    TEST_USER: $TEST_USER
+    TEST_PASS: $TEST_PASS

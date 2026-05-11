@@ -1,0 +1,114 @@
+trigger:
+  branches:
+    include:
+      - main
+
+schedules:
+  - cron: "0 2 * * *"
+    displayName: Nightly Deep Scan
+    branches:
+      include:
+        - main
+    always: true
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  TARGET_URL: "https://dev.example.com"
+
+stages:
+  - stage: SecurityScan
+    displayName: TomcatShield Security Scan
+    jobs:
+      - job: TomcatHardening
+        displayName: Tomcat Hardening Scan
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.12"
+
+          - script: pip install -r requirements.txt
+            displayName: Install dependencies
+
+          - script: |
+              python -m securitytool.cli \
+                --target $(TARGET_URL) \
+                --tomcat \
+                --output-dir artifacts
+            displayName: Run Tomcat Hardening
+            continueOnError: true
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: artifacts
+              artifactName: tomcat-hardening-report
+            condition: always()
+
+      - job: DASTScan
+        displayName: DAST Scan
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.12"
+
+          - script: |
+              sudo apt-get update
+              sudo apt-get install -y default-jre
+            displayName: Install Java
+
+          - script: pip install -r requirements.txt
+            displayName: Install dependencies
+
+          - script: |
+              python -m securitytool.cli \
+                --target $(TARGET_URL) \
+                --dast \
+                --scan-mode quick \
+                --threshold High \
+                --output-dir artifacts
+            displayName: Run DAST Scan
+            env:
+              TEST_USER: $(TEST_USER)
+              TEST_PASS: $(TEST_PASS)
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: artifacts
+              artifactName: dast-scan-report
+            condition: always()
+
+      - job: NightlyDeepScan
+        displayName: Nightly Deep Scan
+        condition: eq(variables['Build.Reason'], 'Schedule')
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.12"
+
+          - script: |
+              sudo apt-get update
+              sudo apt-get install -y default-jre
+            displayName: Install Java
+
+          - script: pip install -r requirements.txt
+            displayName: Install dependencies
+
+          - script: |
+              python -m securitytool.cli \
+                --target $(TARGET_URL) \
+                --tomcat \
+                --dast \
+                --scan-mode deep \
+                --threshold High \
+                --output-dir artifacts
+            displayName: Run Full Deep Scan
+            env:
+              TEST_USER: $(TEST_USER)
+              TEST_PASS: $(TEST_PASS)
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: artifacts
+              artifactName: full-scan-report
+            condition: always()
