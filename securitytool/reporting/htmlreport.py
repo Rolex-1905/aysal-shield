@@ -137,8 +137,26 @@ HTML_TEMPLATE = """
         <div class="solution"><strong>Solution:</strong> {{ finding.solution }}</div>
         {% endif %}
 
-        {% if finding.cweid %}
-        <div class="evidence"><strong>CWE:</strong> {{ finding.cweid }}</div>
+        {% if finding.cweid and finding.cweid != '-1' %}
+        <div class="evidence">
+            <strong>CWE:</strong> 
+            <a href="https://cwe.mitre.org/data/definitions/{{ finding.cweid }}.html" target="_blank">
+                CWE-{{ finding.cweid }}
+            </a>
+        </div>
+        {% endif %}
+
+        {% if finding.reference %}
+        <div class="evidence">
+            <strong>References:</strong>
+            {% for ref in finding.reference.split('\n') %}
+                {% if ref.strip() %}
+                <a href="{{ ref.strip() }}" target="_blank" style="display:block;font-size:0.8em;margin-top:2px">
+                    {{ ref.strip() }}
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
         {% endif %}
 
         <div class="affected-urls">
