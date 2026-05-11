@@ -1,0 +1,17 @@
+type,module,check,status,severity,url,evidence
+Tomcat Hardening,headers_check,Security Header: X-Content-Type-Options,FAIL,,https://vignaniit.edu.in,Header not present
+Tomcat Hardening,headers_check,Security Header: X-Frame-Options,FAIL,,https://vignaniit.edu.in,Header not present
+Tomcat Hardening,headers_check,Security Header: Content-Security-Policy,FAIL,,https://vignaniit.edu.in,Header not present
+Tomcat Hardening,headers_check,Security Header: Strict-Transport-Security,PASS,,https://vignaniit.edu.in,max-age=63072000
+Tomcat Hardening,headers_check,Security Header: Referrer-Policy,FAIL,,https://vignaniit.edu.in,Header not present
+Tomcat Hardening,baseline_check,Default App: /manager,FAIL,,https://vignaniit.edu.in,HTTP 200 at https://vignaniit.edu.in/manager
+Tomcat Hardening,baseline_check,Default App: /host-manager,FAIL,,https://vignaniit.edu.in,HTTP 200 at https://vignaniit.edu.in/host-manager
+Tomcat Hardening,baseline_check,TRACE Method Disabled,PASS,,https://vignaniit.edu.in,HTTP 405
+Tomcat Hardening,baseline_check,Server Banner Suppression,PASS,,https://vignaniit.edu.in,Server header: Vercel
+Tomcat Hardening,baseline_check,TLS Configuration,PASS,,https://vignaniit.edu.in,Protocol: TLSv1.3 | Cipher: TLS_AES_128_GCM_SHA256 | Strength: 128 bits
+Tomcat Hardening,webxml_check,Session Cookie HttpOnly Flag,FAIL,,https://vignaniit.edu.in,No Set-Cookie header found
+Tomcat Hardening,webxml_check,Session Cookie Secure Flag,FAIL,,https://vignaniit.edu.in,No Set-Cookie header found
+Tomcat Hardening,webxml_check,Session Cookie Timeout Configured,FAIL,,https://vignaniit.edu.in,No Set-Cookie header found
+Tomcat Hardening,webxml_check,Error Page Info Disclosure: /error,PASS,,https://vignaniit.edu.in,HTTP 200 — No sensitive info detected
+Tomcat Hardening,webxml_check,Error Page Info Disclosure: /500,PASS,,https://vignaniit.edu.in,HTTP 200 — No sensitive info detected
+Tomcat Hardening,webxml_check,Error Page Info Disclosure: /404,PASS,,https://vignaniit.edu.in,HTTP 200 — No sensitive info detected
