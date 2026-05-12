@@ -22,7 +22,7 @@ HTML_TEMPLATE = """
         .FAIL { background: #f8d7da; border-left: 4px solid #dc3545; }
         .ERROR { background: #fff3cd; border-left: 4px solid #ffc107; }
         .SKIP { background: #e2e3e5; border-left: 4px solid #6c757d; }
-        .N\/A { background: #f8f9fa; border-left: 4px solid #adb5bd; }
+        .NA { background: #f8f9fa; border-left: 4px solid #adb5bd; }
         .INFO { background: #e8f4fd; border-left: 4px solid #3498db; }
         .Critical { background: #f8d7da; border-left: 4px solid #7b0000; }
         .High { background: #f8d7da; border-left: 4px solid #dc3545; }
@@ -113,7 +113,7 @@ HTML_TEMPLATE = """
         {% else %}
             <p>Passed: {{ module.summary.passed }} | Failed: {{ module.summary.failed }} | Total: {{ module.summary.total }}</p>
             {% for result in module.results %}
-            <div class="check {{ result.status }}">
+            <div class="check {{ result.status | replace('/', '') }}">
                 <span class="status">{{ result.status }}</span> — {{ result.check }}
                 <div class="evidence">{{ result.evidence }}</div>
             </div>
