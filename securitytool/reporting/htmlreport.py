@@ -23,6 +23,7 @@ HTML_TEMPLATE = """
         .ERROR { background: #fff3cd; border-left: 4px solid #ffc107; }
         .SKIP { background: #e2e3e5; border-left: 4px solid #6c757d; }
         .N\/A { background: #f8f9fa; border-left: 4px solid #adb5bd; }
+        .INFO { background: #e8f4fd; border-left: 4px solid #3498db; }
         .Critical { background: #f8d7da; border-left: 4px solid #7b0000; }
         .High { background: #f8d7da; border-left: 4px solid #dc3545; }
         .Medium { background: #fff3cd; border-left: 4px solid #ffc107; }

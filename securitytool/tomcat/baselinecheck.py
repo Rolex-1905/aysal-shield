@@ -5,6 +5,45 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import ssl
 import socket
 
+def detect_tomcat(target: str) -> dict:
+    tomcat_indicators = []
+    is_tomcat = False
+
+    try:
+        response = requests.get(target, timeout=10, verify=False)
+        server_header = response.headers.get("Server", "").lower()
+        powered_by = response.headers.get("X-Powered-By", "").lower()
+        body = response.text.lower()
+
+        if "tomcat" in server_header:
+            tomcat_indicators.append(f"Server header: {server_header}")
+            is_tomcat = True
+
+        if "tomcat" in powered_by:
+            tomcat_indicators.append(f"X-Powered-By: {powered_by}")
+            is_tomcat = True
+
+        if "apache tomcat" in body or "tomcat" in body:
+            tomcat_indicators.append("Tomcat references found in page body")
+            is_tomcat = True
+
+        manager_response = requests.get(
+            target.rstrip("/") + "/manager",
+            timeout=5, verify=False
+        )
+        if manager_response.status_code in [200, 401, 403]:
+            tomcat_indicators.append(f"Tomcat manager endpoint responded: HTTP {manager_response.status_code}")
+            is_tomcat = True
+
+    except requests.exceptions.RequestException:
+        pass
+
+    return {
+        "is_tomcat": is_tomcat,
+        "confidence": "High" if len(tomcat_indicators) > 1 else "Low" if tomcat_indicators else "None",
+        "indicators": tomcat_indicators
+    }
+
 def check_tls(target: str) -> dict:
     if not target.startswith("https://"):
         return {
@@ -111,6 +150,19 @@ def check_server_banner(target: str) -> dict:
 def run_baseline_checks(target: str) -> dict:
     results = []
 
+    tomcat_detection = detect_tomcat(target)
+    logger.info("Tomcat detection", extra={
+        "is_tomcat": tomcat_detection["is_tomcat"],
+        "confidence": tomcat_detection["confidence"],
+        "indicators": tomcat_detection["indicators"]
+    })
+
+    results.append({
+        "check": "Tomcat Detection",
+        "status": "PASS" if tomcat_detection["is_tomcat"] else "INFO",
+        "evidence": f"Confidence: {tomcat_detection['confidence']} | Indicators: {', '.join(tomcat_detection['indicators']) if tomcat_detection['indicators'] else 'No Tomcat indicators found — checks may not apply'}"
+    })
+
     results.extend(check_default_apps(target))
     results.append(check_trace_method(target))
     results.append(check_server_banner(target))
@@ -125,6 +177,8 @@ def run_baseline_checks(target: str) -> dict:
     return {
         "module": "baseline_check",
         "target": target,
+        "tomcat_detected": tomcat_detection["is_tomcat"],
+        "tomcat_confidence": tomcat_detection["confidence"],
         "summary": {"passed": passed, "failed": failed, "total": len(results)},
         "results": results
     }
