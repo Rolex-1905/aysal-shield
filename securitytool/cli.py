@@ -33,7 +33,7 @@ def setup_logger():
 @click.option("--discover", "run_discover", is_flag=True, default=False, help="Run discovery crawl and endpoint inventory")
 
 def main(target, config_path, scan_mode, report_format, threshold, non_destructive, output_dir, run_tomcat, run_dast, include_patterns, exclude_patterns, run_discover):
-    """TomcatShield — Enterprise Web Application Security Automation Platform"""
+    """Aysal Shield — Enterprise Web Application Security Automation Platform"""
 
     logger = setup_logger()
 
@@ -44,7 +44,7 @@ def main(target, config_path, scan_mode, report_format, threshold, non_destructi
         run_interactive()
         return
 
-    logger.info("AYSAL Shield starting", extra={"version": "1.0.0"})
+    logger.info("Aysal Shield starting", extra={"version": "1.0.0"})
 
     config = {}
 

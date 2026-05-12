@@ -1,6 +1,6 @@
-# TomcatShield — Enterprise Web Application Security Automation Platform
+# Aysal Shield — Enterprise Web Application Security Automation Platform
 
-TomcatShield is a CI-native application security automation platform for web 
+Aysal Shield is a CI-native application security automation platform for web 
 applications running on Apache Tomcat. It provides continuous security assurance 
 through automated DAST scanning, Tomcat hardening checks, and CI/CD pipeline gates.
 

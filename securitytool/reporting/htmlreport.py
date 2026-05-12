@@ -8,7 +8,7 @@ HTML_TEMPLATE = """
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>TomcatShield Security Report</title>
+    <title>Aysal Shield Security Report</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
         h1 { color: #2c3e50; }
@@ -22,6 +22,7 @@ HTML_TEMPLATE = """
         .FAIL { background: #f8d7da; border-left: 4px solid #dc3545; }
         .ERROR { background: #fff3cd; border-left: 4px solid #ffc107; }
         .SKIP { background: #e2e3e5; border-left: 4px solid #6c757d; }
+        .N\/A { background: #f8f9fa; border-left: 4px solid #adb5bd; }
         .Critical { background: #f8d7da; border-left: 4px solid #7b0000; }
         .High { background: #f8d7da; border-left: 4px solid #dc3545; }
         .Medium { background: #fff3cd; border-left: 4px solid #ffc107; }
@@ -48,7 +49,7 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>TomcatShield Security Report</h1>
+    <h1>Aysal Shield Security Report</h1>
 
     <div class="summary">
         <p class="meta">Generated: {{ generated_at }}</p>

@@ -8,37 +8,42 @@ logger = logging.getLogger(__name__)
 INSECURE_ERROR_PAGES = ["/error", "/500", "/404"]
 
 def check_session_timeout(target: str) -> dict:
-    """
-    Attempts to infer session timeout by checking session-related headers.
-    In a real environment this would parse web.xml directly if accessible.
-    """
     try:
         response = requests.get(target, timeout=10, verify=False)
         cookie_header = response.headers.get("Set-Cookie", "")
+
+        if not cookie_header:
+            return [{
+                "check": "Session Cookie HttpOnly Flag",
+                "status": "N/A",
+                "evidence": "No Set-Cookie header found — session cookies not detected"
+            }, {
+                "check": "Session Cookie Secure Flag",
+                "status": "N/A",
+                "evidence": "No Set-Cookie header found — session cookies not detected"
+            }, {
+                "check": "Session Cookie Timeout Configured",
+                "status": "N/A",
+                "evidence": "No Set-Cookie header found — session cookies not detected"
+            }]
 
         has_timeout = "Max-Age" in cookie_header or "Expires" in cookie_header
         has_httponly = "HttpOnly" in cookie_header
         has_secure = "Secure" in cookie_header
 
-        results = [
-            {
-                "check": "Session Cookie HttpOnly Flag",
-                "status": "PASS" if has_httponly else "FAIL",
-                "evidence": cookie_header or "No Set-Cookie header found"
-            },
-            {
-                "check": "Session Cookie Secure Flag",
-                "status": "PASS" if has_secure else "FAIL",
-                "evidence": cookie_header or "No Set-Cookie header found"
-            },
-            {
-                "check": "Session Cookie Timeout Configured",
-                "status": "PASS" if has_timeout else "FAIL",
-                "evidence": cookie_header or "No Set-Cookie header found"
-            }
-        ]
-
-        return results
+        return [{
+            "check": "Session Cookie HttpOnly Flag",
+            "status": "PASS" if has_httponly else "FAIL",
+            "evidence": cookie_header
+        }, {
+            "check": "Session Cookie Secure Flag",
+            "status": "PASS" if has_secure else "FAIL",
+            "evidence": cookie_header
+        }, {
+            "check": "Session Cookie Timeout Configured",
+            "status": "PASS" if has_timeout else "FAIL",
+            "evidence": cookie_header
+        }]
 
     except requests.exceptions.RequestException as e:
         return [{

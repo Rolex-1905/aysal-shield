@@ -1,4 +1,4 @@
-name: TomcatShield Security Scan
+name: AYSAL Shield Security Scan
 
 on:
   push:

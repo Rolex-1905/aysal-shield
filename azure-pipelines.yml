@@ -19,7 +19,7 @@ variables:
 
 stages:
   - stage: SecurityScan
-    displayName: TomcatShield Security Scan
+    displayName: Aysal Shield Security Scan
     jobs:
       - job: TomcatHardening
         displayName: Tomcat Hardening Scan

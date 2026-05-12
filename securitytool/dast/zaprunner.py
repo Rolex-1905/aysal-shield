@@ -26,7 +26,7 @@ def start_zap_in_new_terminal():
 
     bat_content = (
         '@echo off\n'
-        'echo Starting ZAP for TomcatShield...\n'
+        'echo Starting ZAP for Aysal Shield...\n'
         'cd /d "C:\\Program Files\\ZAP\\Zed Attack Proxy"\n'
         f'java -Xmx512m -jar zap-2.17.0.jar -daemon -port {ZAP_PORT} -config api.key={ZAP_API_KEY}\n'
         'pause\n'
@@ -115,7 +115,7 @@ def run_zap_scan(target: str, non_destructive: bool = True, max_duration: int = 
 
     try:
         # Set up scan context
-        context_name = "tomcatshield_context"
+        context_name = "Aysal_Shield_context"
         context_id = zap.context.new_context(context_name)
         logger.info("Created ZAP context", extra={"context_id": context_id})
 

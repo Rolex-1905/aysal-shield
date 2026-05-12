@@ -1,7 +1,7 @@
-# TomcatShield Architecture
+# Aysal Shield Architecture
 
 ## Overview
-TomcatShield is a modular Python CLI platform. Each module is independently 
+Aysal Shield is a modular Python CLI platform. Each module is independently 
 testable and replaceable.
 
 ## Module Responsibilities

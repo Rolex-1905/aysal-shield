@@ -45,7 +45,7 @@ def save_inventory(inventory: dict, output_dir: str = "artifacts") -> str:
 
     with open(filepath, "w") as f:
         json.dump({
-            "tool": "TomcatShield",
+            "tool": "Aysal_Shield",
             "generated_at": datetime.now().isoformat(),
             "inventory": inventory
         }, f, indent=2)
