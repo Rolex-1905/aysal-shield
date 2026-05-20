@@ -20,7 +20,7 @@ def save_json_report(data: dict, output_dir: str = "artifacts") -> str:
 
     report = {
         "tool": "AYSAL Shield",
-        "version": "1.0.0",
+        "version": "0.1.0",
         "generated_at": datetime.now().isoformat(),
         "report": redact_dict(data)
     }
