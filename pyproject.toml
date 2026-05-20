@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "AysalShield"
+version = "1.0.0"
+description = "Enterprise Web Application Security Automation Platform for Apache Tomcat"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+keywords = ["security", "dast", "tomcat", "devsecops", "appsec"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "click>=8.1",
+    "pyyaml>=6.0",
+    "python-json-logger>=2.0",
+    "requests>=2.31",
+    "jinja2>=3.1",
+    "python-owasp-zap-v2.4>=0.0.21",
+    "beautifulsoup4>=4.12",
+    "rich>=13.0",
+    "urllib3>=2.0",
+]
+
+[project.scripts]
+AysalShield = "securitytool.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "ruff>=0.1",
+    "pre-commit>=3.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["securitytool*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short -v"
