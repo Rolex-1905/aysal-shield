@@ -2,31 +2,33 @@
   "target": "https://dev.example.com",
   "auth": {
     "type": "form",
-    "loginurl": "https://dev.example.com/login",
-    "username": "tester",
-    "password": "P@ssw0rd!",
-    "usernamefield": "user",
-    "passwordfield": "pass"
+    "login_url": "https://dev.example.com/login",
+    "username": "${TEST_USER}",
+    "password": "${TEST_PASS}",
+    "username_field": "user",
+    "password_field": "pass",
+    "logged_in_indicator": "logout",
+    "logged_out_indicator": "login"
   },
   "include": ["/", "/account", "/search", "/api/"],
   "exclude": ["/static/", "/assets/*", "/logout"],
   "scan": {
-    "policies": ["xss", "sqli", "pathtraversal", "ssrf", "openredirect"],
-    "maxdurationminutes": 30,
-    "nondestructive": true
+    "policies": ["xss", "sqli", "path_traversal", "ssrf", "open_redirect"],
+    "max_duration_minutes": 30,
+    "non_destructive": true
   },
   "tomcat": {
-    "checkheaders": true,
-    "checkdefaultapps": true,
-    "checktls": true
+    "check_headers": true,
+    "check_default_apps": true,
+    "check_tls": true
   },
   "report": {
-    "formats": ["json", "html"],
-    "outputdir": "artifacts"
+    "formats": ["json", "html", "csv"],
+    "output_dir": "artifacts"
   },
   "threshold": {
-    "failon": "High",
-    "maxhigh": 0,
-    "maxmedium": 3
+    "fail_on": "High",
+    "max_high": 0,
+    "max_medium": 3
   }
 }
