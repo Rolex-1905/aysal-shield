@@ -236,6 +236,229 @@ def check_error_handling(target: str) -> list:
     return results
 
 
+# ---------------------------------------------------------------------------
+# NEW: Functional Sanity Tests
+# ---------------------------------------------------------------------------
+
+def check_session_fixation(target: str) -> dict:
+    """
+    Test for session fixation: capture the pre-auth JSESSIONID, simulate a
+    login attempt, then verify the session ID was rotated afterwards.
+    A proper implementation calls HttpSession.invalidate() + getSession(true)
+    on successful authentication, which changes the ID.
+    """
+    session = requests.Session()
+    session.verify = False
+
+    try:
+        # Step 1: Capture pre-auth session ID
+        session.get(target, timeout=10)
+        pre_session_id = session.cookies.get("JSESSIONID", "")
+
+        if not pre_session_id:
+            return {
+                "check": "Session Fixation",
+                "status": "N/A",
+                "evidence": "No JSESSIONID issued before login — fixation check skipped",
+                "remediation": (
+                    "Ensure the application issues a JSESSIONID on first contact "
+                    "so that pre/post-login rotation can be verified."
+                ),
+            }
+
+        # Step 2: Simulate a login attempt (dummy credentials trigger session handling)
+        login_url = target.rstrip("/") + "/login"
+        session.post(
+            login_url,
+            data={"username": "fixation_probe_user", "password": "fixation_probe_pass"},
+            timeout=10,
+            allow_redirects=True,
+        )
+
+        # Step 3: Compare session IDs
+        post_session_id = session.cookies.get("JSESSIONID", "")
+
+        if not post_session_id:
+            return {
+                "check": "Session Fixation",
+                "status": "N/A",
+                "evidence": "No JSESSIONID present after login attempt — unable to compare IDs",
+                "remediation": "Verify that the application issues session cookies on authentication.",
+            }
+
+        fixed = pre_session_id == post_session_id
+        return {
+            "check": "Session Fixation",
+            "status": "FAIL" if fixed else "PASS",
+            "evidence": (
+                f"Pre-login  JSESSIONID: {pre_session_id[:20]}... | "
+                f"Post-login JSESSIONID: {post_session_id[:20]}... | "
+                f"{'UNCHANGED — session fixation risk detected' if fixed else 'ROTATED — session regenerated correctly'}"
+            ),
+            "remediation": (
+                "On every successful login call HttpSession.invalidate() immediately followed by "
+                "request.getSession(true) to force a new session ID. "
+                "In Spring Security this is the default behaviour; verify SessionFixationProtectionStrategy is active."
+            ) if fixed else "",
+        }
+
+    except requests.exceptions.RequestException as e:
+        return {
+            "check": "Session Fixation",
+            "status": "ERROR",
+            "evidence": str(e),
+            "remediation": "Check that the target application is reachable.",
+        }
+
+
+def check_login_failure_handling(target: str) -> list:
+    """
+    Submit invalid credentials to /login and verify three things:
+      1. Login is actually rejected (no dashboard content returned).
+      2. The error message does not enumerate whether the username or password was wrong.
+      3. No stack trace or server internals are disclosed in the error response.
+    """
+    results = []
+    login_url = target.rstrip("/") + "/login"
+
+    try:
+        resp = requests.post(
+            login_url,
+            data={"username": "invalid_probe_user_xyz", "password": "invalid_probe_pass_xyz"},
+            timeout=10,
+            verify=False,
+            allow_redirects=True,
+        )
+        body_lower = resp.text.lower()
+
+        # Check 1: Confirm login was rejected
+        login_succeeded = resp.status_code == 200 and any(
+            kw in body_lower
+            for kw in ["dashboard", "welcome", "logout", "my account", "profile"]
+        )
+        results.append({
+            "check": "Login Failure: Invalid Credentials Rejected",
+            "status": "FAIL" if login_succeeded else "PASS",
+            "evidence": (
+                f"HTTP {resp.status_code} — "
+                f"{'Login appeared to succeed with invalid credentials' if login_succeeded else 'Login correctly rejected'}"
+            ),
+            "remediation": (
+                "Verify authentication logic validates credentials server-side before granting access. "
+                "Never trust client-supplied session state."
+            ) if login_succeeded else "",
+        })
+
+        # Check 2: Verify no username enumeration via error message
+        reveals_username = any(kw in body_lower for kw in [
+            "user not found", "unknown user", "no account found",
+            "username does not exist", "email not registered",
+        ])
+        results.append({
+            "check": "Login Failure: No Username Enumeration",
+            "status": "FAIL" if reveals_username else "PASS",
+            "evidence": (
+                f"HTTP {resp.status_code} — "
+                f"{'Error message reveals whether the username exists' if reveals_username else 'Generic error message returned — no enumeration'}"
+            ),
+            "remediation": (
+                "Return a single generic message regardless of which field failed, e.g. "
+                "'Invalid username or password.' Never indicate whether the username or password was wrong."
+            ) if reveals_username else "",
+        })
+
+        # Check 3: Verify no stack trace or server info in error response
+        exposes_server_info = any(kw in body_lower for kw in [
+            "stack trace", "exception", "java.", "at org.", "at com.",
+            "caused by", "nullpointerexception", "tomcat", "coyote",
+        ])
+        results.append({
+            "check": "Login Failure: No Server Info Disclosed",
+            "status": "FAIL" if exposes_server_info else "PASS",
+            "evidence": (
+                f"HTTP {resp.status_code} — "
+                f"{'Stack trace or server internals detected in error response' if exposes_server_info else 'No sensitive server info in error response'}"
+            ),
+            "remediation": (
+                "Configure a custom error page for HTTP 500 in web.xml and disable Tomcat's default "
+                "exception renderer. Set <error-page><exception-type>java.lang.Exception</exception-type>"
+                "<location>/error</location></error-page>."
+            ) if exposes_server_info else "",
+        })
+
+    except requests.exceptions.RequestException as e:
+        results.append({
+            "check": "Login Failure Handling",
+            "status": "ERROR",
+            "evidence": str(e),
+            "remediation": "Ensure the /login endpoint is reachable from the scan host.",
+        })
+
+    return results
+
+
+def check_logout_invalidation(target: str) -> dict:
+    """
+    Verify that hitting /logout actually clears or rotates the JSESSIONID.
+    A session that survives logout is reusable after the user believes they
+    have signed out — a common session management vulnerability.
+    """
+    session = requests.Session()
+    session.verify = False
+
+    try:
+        # Establish a session
+        session.get(target, timeout=10)
+        session_id_before = session.cookies.get("JSESSIONID", "")
+
+        # Hit the logout endpoint
+        logout_url = target.rstrip("/") + "/logout"
+        session.get(logout_url, timeout=10, allow_redirects=True)
+
+        session_id_after = session.cookies.get("JSESSIONID", "")
+
+        # PASS: cookie was cleared entirely OR was rotated to a new value
+        cookie_cleared = not session_id_after
+        cookie_rotated = session_id_after and session_id_after != session_id_before
+        session_invalidated = cookie_cleared or cookie_rotated
+
+        if cookie_cleared:
+            evidence_detail = "JSESSIONID cookie cleared after logout — session properly invalidated"
+        elif cookie_rotated:
+            evidence_detail = (
+                f"JSESSIONID rotated after logout "
+                f"({session_id_before[:16]}... → {session_id_after[:16]}...) — OK"
+            )
+        else:
+            evidence_detail = (
+                f"JSESSIONID unchanged after logout "
+                f"({session_id_before[:16]}...) — session NOT invalidated"
+            )
+
+        return {
+            "check": "Logout Session Invalidation",
+            "status": "PASS" if session_invalidated else "FAIL",
+            "evidence": f"Pre-logout: {'present' if session_id_before else 'absent'} | {evidence_detail}",
+            "remediation": (
+                "Call HttpSession.invalidate() in the logout handler and delete the JSESSIONID cookie explicitly. "
+                "In Spring Security: http.logout().invalidateHttpSession(true).deleteCookies('JSESSIONID'). "
+                "In plain servlets: session.invalidate(); response.setHeader('Set-Cookie', 'JSESSIONID=; Max-Age=0; Path=/');"
+            ) if not session_invalidated else "",
+        }
+
+    except requests.exceptions.RequestException as e:
+        return {
+            "check": "Logout Session Invalidation",
+            "status": "ERROR",
+            "evidence": str(e),
+            "remediation": "Check that the target application and /logout endpoint are reachable.",
+        }
+
+
+# ---------------------------------------------------------------------------
+# Main runner — orchestrates all checks in this module
+# ---------------------------------------------------------------------------
+
 def run_webxml_checks(target: str) -> dict:
     results = []
 
@@ -243,6 +466,11 @@ def run_webxml_checks(target: str) -> dict:
     results.extend(check_security_constraints(target))
     results.extend(check_transport_security(target))
     results.extend(check_error_handling(target))
+
+    # Functional sanity tests (added to complete Week 2 spec requirements)
+    results.append(check_session_fixation(target))
+    results.extend(check_login_failure_handling(target))
+    results.append(check_logout_invalidation(target))
 
     for r in results:
         logger.info("Web.xml check", extra={k: v for k, v in r.items() if k != "remediation"})
