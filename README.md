@@ -1,4 +1,4 @@
-# 🛡️ AYSAL SHIELD
+# 🛡️ Aysal Shield
 
 ### Enterprise Web Application Security Automation Platform
 
