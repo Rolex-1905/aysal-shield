@@ -358,7 +358,7 @@ Pipeline behavior:
 | Document | Description |
 |----------|-------------|
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module architecture, data flow, and interface contracts |
-| [AUTH_SETUP.md](docs/AUTH_SETUP.md) | Authentication setup (form, token, basic) │
+| [AUTH_SETUP.md](docs/AUTH_SETUP.md) | Authentication setup (form, token, basic) |
 | [CONFIG_REFERENCE.md](docs/CONFIG_REFERENCE.md) | All config parameters, types, and defaults |
 | [EXTENSIBILITY.md](docs/EXTENSIBILITY.md) | How to add new checks, parsers, and formats |
 | [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) | Known limitations and workarounds |
