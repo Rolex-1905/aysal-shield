@@ -28,38 +28,38 @@ Tomcat hardening → active scan → normalization → reporting → CI gate.
 ## 3. Data Flow
 ```
 CLI Input (flags / config file)
-│
-▼
+        │
+        ▼
 Config Load & Validation (config.py)
-
-Resolve ${ENV_VAR} substitutions
-Validate required fields
-│
-├──► Tomcat Hardening (--tomcat flag)
-│       ├── headerscheck.py   → HTTP GET → header presence
-│       ├── baselinecheck.py  → HTTP GET/TRACE/TLS socket → pass/fail
-│       └── webxmlcheck.py    → HTTP GET/POST → cookie, constraint, functional tests
-│
-├──► Discovery Crawl (--discover flag)
-│       ├── crawler.py        → BFS crawl → endpoint list
-│       └── inventory.py      → aggregate → discovery_inventory_*.json
-│
-└──► DAST Scan (--dast flag)
-├── zaprunner.py      → start ZAP daemon
-│                    → create context (include/exclude)
-│                    → configure form auth
-│                    → spider → active scan → alerts[]
-└── parsers.py        → normalize → deduplicate → enrich
-→ group_findings() → calculate_risk_score()
+   - Resolve ${ENV_VAR} substitutions
+   - Validate required fields
+        │
+        ├──► Tomcat Hardening (--tomcat flag)
+        │       ├── headerscheck.py   → HTTP GET → header presence
+        │       ├── baselinecheck.py  → HTTP GET/TRACE/TLS socket → pass/fail
+        │       └── webxmlcheck.py    → HTTP GET/POST → cookie, constraint, functional tests
+        │
+        ├──► Discovery Crawl (--discover flag)
+        │       ├── crawler.py        → BFS crawl → endpoint list
+        │       └── inventory.py      → aggregate → discovery_inventory_*.json
+        │
+        └──► DAST Scan (--dast flag)
+                ├── zaprunner.py      → start ZAP daemon
+                │                     → create context (include/exclude)
+                │                     → configure form auth
+                │                     → spider → active scan → alerts[]
+                └── parsers.py        → normalize → deduplicate → enrich
+                                      → group_findings() → calculate_risk_score()
 
 All results → Unified Report Dict
-│
-├── jsonreport.py  → artifacts/security_report_.json
-├── htmlreport.py  → artifacts/security_report_.html
-└── csvexport.py   → artifacts/security_report_*.csv
-│
-▼
-thresholds.py → severity_counts → breaches? → sys.exit(1)
+        │
+        ├── jsonreport.py  → artifacts/security_report_*.json
+        ├── htmlreport.py  → artifacts/security_report_*.html
+        └── csvexport.py   → artifacts/security_report_*.csv
+                │
+                ▼
+        thresholds.py → severity_counts → breaches? → sys.exit(1)
+        
 ``` 
 ## 4. Interface Contracts
 

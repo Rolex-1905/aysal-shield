@@ -109,7 +109,7 @@ def check_default_apps(target: str) -> list:
         try:
             response = requests.get(url, timeout=10, verify=False, allow_redirects=False)
             # 404 / 403 = good (absent or access-controlled)
-            accessible = response.status_code not in (404, 403)
+            accessible = response.status_code not in (404, 403, 401)
             results.append({
                 "check": f"Default App: {path}",
                 "status": "FAIL" if accessible else "PASS",
@@ -158,7 +158,7 @@ def check_http_methods(target: str) -> list:
         try:
             response = requests.request(method, target, timeout=10, verify=False)
             # 405 = method not allowed (good); 200/201/204 = method allowed (bad)
-            allowed = response.status_code not in (405, 501, 403, 404)
+            allowed = response.status_code not in (405, 501, 403, 404, 400) 
             results.append({
                 "check": f"HTTP Method {method} Disabled",
                 "status": "FAIL" if allowed else "PASS",

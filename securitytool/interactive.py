@@ -145,7 +145,7 @@ def view_last_report(output_dir: str = "artifacts"):
     console.print(f"[dim]Loading: {filepath}[/dim]\n")
     if "tomcat_hardening" in report.get("report", {}):
         display_tomcat_results(report["report"])
-    elif "dast_scan" in report.get("report", {}):
+    if "dast_scan" in report.get("report", {}):
         display_dast_results(report["report"])
     else:
         console.print_json(json.dumps(report, indent=2))
