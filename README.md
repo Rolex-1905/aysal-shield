@@ -2,13 +2,16 @@
 
 ### Enterprise Web Application Security Automation Platform
 
-**v0.1.0** | Developed by Neeraj Mudunuru
+**v0.1.0** | Developed by [Neeraj Mudunuru](https://www.linkedin.com/in/neeraj-mudunuru-79130a29a/)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)](https://python.org)
 [![ZAP](https://img.shields.io/badge/OWASP%20ZAP-2.17.0-red?style=for-the-badge)](https://zaproxy.org)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange?style=for-the-badge&logo=openjdk)](https://adoptium.net)
-[![License](https://img.shields.io/badge/License-Proprietary-darkred?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey?style=for-the-badge)](https://github.com)
+
+---
+![Aysal Shield Logo](docs/images/logo.png)
 
 ---
 
@@ -47,8 +50,8 @@ It orchestrates the full **Dynamic Application Security Testing (DAST)** lifecyc
 ### Windows (Powershell)
 
 ```powershell
-git clone <your-repo-url>
-cd Aysal_Shield
+git clone https://github.com/Rolex-1905/aysal-shield.git
+cd aysal-shield
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
@@ -63,8 +66,8 @@ python -m securitytool.cli --help
 ### Linux
 
 ```bash
-git clone <your-repo-url>
-cd Security-Tool-V1.1
+git clone https://github.com/Rolex-1905/aysal-shield.git
+cd aysal-shield
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -190,40 +193,47 @@ Security-Tool-V1.1/
 │   ├── dev.json                    ← quick scan config
 │   └── deep_scan.json              ← deep scan config
 ├── docs/
-│   ├── README.md
-│   ├── RUNBOOK.md
+│   ├── images
+│   │   ├── cli-help.png
+│   │   ├── cli-menu.png
+│   │   └── logo.png
 │   ├── ARCHITECTURE.md
 │   ├── AUTH_SETUP.md
 │   ├── CONFIG_REFERENCE.md
 │   ├── EXTENSIBILITY.md
-│   └── KNOWN_LIMITATIONS.md
+│   ├── KNOWN_LIMITATIONS.md
+│   ├── RUNBOOK.md
+│   └── THREAT_MODEL.md
 ├── securitytool/
-│   ├── cli.py                      ← entry point & argument parsing
-│   ├── config.py                   ← config load/validate (YAML/JSON)
-│   ├── utils.py                    ← PII redaction, logging utilities
-│   ├── interactive.py              ← interactive menu
 │   ├── ci/
 │   │   └── thresholds.py           ← CI gate: fail conditions & exit codes
 │   ├── dast/
-│   │   ├── zaprunner.py            ← ZAP daemon lifecycle & scan execution
-│   │   └── parsers.py              ← normalize ZAP output → internal schema
+│   │   ├── parsers.py              ← normalize ZAP output → internal schema
+│   │   └── zaprunner.py            ← ZAP daemon lifecycle & scan execution
 │   ├── discovery/
 │   │   ├── crawler.py              ← unauthenticated + authenticated crawl
 │   │   └── inventory.py            ← endpoint inventory builder
 │   ├── reporting/
-│   │   ├── jsonreport.py           ← machine-readable JSON report
+│   │   ├── csvexport.py            ← management summary CSV
 │   │   ├── htmlreport.py           ← human-readable HTML report
-│   │   └── csvexport.py            ← management summary CSV
-│   └── tomcat/
-│       ├── headerscheck.py         ← HTTP security headers
-│       ├── baselinecheck.py        ← default apps, TRACE, TLS, banners
-│       └── webxmlcheck.py          ← session timeout, security constraints
-├── requirements.txt
-├── README.md
-├── .pre-commit-config..yml
+│   │   └── jsonreport.py           ← machine-readable JSON report
+│   ├── tomcat/
+│   │   ├── baselinecheck.py        ← default apps, TRACE, TLS, banners
+│   │   ├── headerscheck.py         ← HTTP security headers
+│   │   └── webxmlcheck.py          ← session timeout, security constraints
+│   │
+│   ├── cli.py                      ← entry point & argument parsing
+│   ├── config.py                   ← config load/validate (YAML/JSON)
+│   ├── interactive.py              ← interactive menu
+│   └── utils.py                    ← PII redaction, logging utilities
+├── .gitignore
+├── .pre-commit-config.yml
 ├── azure-pipelines.yml
+├── gitlab-ci.yml
+├── LICENSE
 ├── pyproject.toml
-└── gitlab-ci.yml
+├── README.md
+└── requirements.txt
 ```
 
 ### Data Flow
@@ -347,13 +357,13 @@ Pipeline behavior:
 
 | Document | Description |
 |----------|-------------|
-| [SETUP.md](SETUP.md) | Installation and setup for Windows & Linux |
-| [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operational runbook — scanning, troubleshooting |
-| [docs/CONFIG_REFERENCE.md](docs/CONFIG_REFERENCE.md) | All config parameters, types, and defaults |
-| [docs/AUTH_SETUP.md](docs/AUTH_SETUP.md) | Authentication setup (form, token, basic) |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module architecture and data flow |
-| [docs/EXTENSIBILITY.md](docs/EXTENSIBILITY.md) | How to add new checks, parsers, and formats |
-| [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) | Known limitations and workarounds |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module architecture, data flow, and interface contracts |
+| [AUTH_SETUP.md](docs/AUTH_SETUP.md) | Authentication setup (form, token, basic) │
+| [CONFIG_REFERENCE.md](docs/CONFIG_REFERENCE.md) | All config parameters, types, and defaults |
+| [EXTENSIBILITY.md](docs/EXTENSIBILITY.md) | How to add new checks, parsers, and formats |
+| [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) | Known limitations and workarounds |
+| [RUNBOOK.md](docs/RUNBOOK.md) | Operational runbook — scanning, troubleshooting |
+| [THREAT_MODEL.md](docs/THREAT_MODEL.md) | Threat model — assets, entry points, risks, mitigations |
 
 ---
 
@@ -384,4 +394,4 @@ The following are **not** covered by Aysal Shield unless explicitly configured:
 
 **Aysal Shield** — Enterprise Web Application Security Automation Platform
 
-v0.1.0 | Developed by Neeraj Mudunuru | Confidential
+v0.1.0 | Developed by [Neeraj Mudunuru](https://www.linkedin.com/in/neeraj-mudunuru-79130a29a/)

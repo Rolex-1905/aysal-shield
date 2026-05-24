@@ -68,30 +68,30 @@ Every module entry function receives primitive types only (str, bool, int, dict)
 No module imports from another module except parsers.py (imported by htmlreport + csvexport).
 
 ### Internal finding schema (parsers.py → reporters)
-name:        str   — vulnerability name
-severity:    str   — Informational | Low | Medium | High | Critical
-url:         str   — affected URL
-parameter:   str   — affected parameter or header
-evidence:    str   — raw snippet from HTTP response
-description: str   — full description
-solution:    str   — remediation advice
-reference:   str   — ZAP reference text + OWASP link (newline-separated)
-owasp_link:  str   — direct OWASP Top 10 2021 URL
-cweid:       str   — CWE identifier
-wascid:      str   — WASC identifier
-plugin_id:   str   — ZAP plugin ID
-confidence:  str   — ZAP confidence level
+- name:        str   — vulnerability name
+- severity:    str   — Informational | Low | Medium | High | Critical
+- url:         str   — affected URL
+- parameter:   str   — affected parameter or header
+- evidence:    str   — raw snippet from HTTP response
+- description: str   — full description
+- solution:    str   — remediation advice
+- reference:   str   — ZAP reference text + OWASP link (newline-separated)
+- owasp_link:  str   — direct OWASP Top 10 2021 URL
+- cweid:       str   — CWE identifier
+- wascid:      str   — WASC identifier
+- plugin_id:   str   — ZAP plugin ID
+- confidence:  str   — ZAP confidence level
 
 ### Tomcat hardening result schema (all three tomcat modules → reporters)
-check:        str   — human-readable check name
-status:       str   — PASS | FAIL | SKIP | N/A | ERROR
-evidence:     str   — HTTP evidence (headers, status codes, cookie values)
-remediation:  str   — fix guidance (optional; shown in HTML report)
+- check:        str   — human-readable check name
+- status:       str   — PASS | FAIL | SKIP | N/A | ERROR
+- evidence:     str   — HTTP evidence (headers, status codes, cookie values)
+- remediation:  str   — fix guidance (optional; shown in HTML report)
 
 ### Threshold result schema (thresholds.py → cli.py)
-passed:          bool        — True if no breaches
-severity_counts: dict        — {Informational, Low, Medium, High, Critical: int}
-breaches:        list[str]   — human-readable breach descriptions
+- passed:          bool        — True if no breaches
+- severity_counts: dict        — {Informational, Low, Medium, High, Critical: int}
+- breaches:        list[str]   — human-readable breach descriptions
 
 ## 5. Error Handling Strategy
 

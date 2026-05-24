@@ -235,6 +235,19 @@ def run_interactive():
                 }
                 display_tomcat_results(full_report)
 
+                if choice == "3":
+                    from securitytool.discovery.crawler import crawl
+                    from securitytool.discovery.inventory import build_inventory, save_inventory
+
+                    with console.status("[bold cyan]Running discovery crawl...[/bold cyan]"):
+                        auth_config = config.get("auth", None)
+                        crawled_urls = crawl(target, auth_config=auth_config)
+                        inventory = build_inventory(crawled_urls)
+                        inv_path = save_inventory(inventory, output_dir)
+
+                    console.print(f"[bold cyan]Discovery:[/bold cyan] {len(crawled_urls)} endpoints found")
+                    console.print(f"[dim]Inventory: {inv_path}[/dim]")
+
             if choice in ["2", "3"]:
                 from securitytool.dast.zaprunner import run_zap_scan
                 from securitytool.dast.parsers import normalize_alerts

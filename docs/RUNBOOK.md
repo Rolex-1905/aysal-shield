@@ -16,8 +16,8 @@ Before running any scan:
 ## Installation
 
 ```bash
-git clone <your-repo-url>
-cd Aysal_Shield
+git clone https://github.com/Rolex-1905/aysal-shield.git
+cd aysal-shield
 
 # Python environment
 python -m venv venv
