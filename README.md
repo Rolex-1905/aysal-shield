@@ -184,7 +184,7 @@ python -m securitytool.cli --config configs/deep_scan.json --tomcat --dast
 Aysal Shield is a modular Python CLI platform. Each module is independently testable and replaceable.
 
 ```
-Security-Tool-V1.1/
+aysal-shield/
 ├── .github/
 │   └── workflows/
 │       └── security-scan.yml       ← GitHub Actions pipeline
