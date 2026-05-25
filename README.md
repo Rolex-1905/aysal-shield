@@ -238,26 +238,17 @@ aysal-shield/
 
 ### Data Flow
 
-```
-Target URL
-    │
-    ▼
-┌─────────────┐      ┌──────────────┐      ┌──────────────────┐
-│  Discovery  │────▶│  DAST Runner │────▶│ Parser/Normalize │
-│  Crawler    │      │  (ZAP)       │      │ Dedup + Severity │
-└─────────────┘      └──────────────┘      └─────────┬────────┘
-                                                    │
-┌─────────────┐                                     ▼
-│   Tomcat    │                           ┌──────────────────┐
-│  Hardening  │─────────────────────────▶│   Reporting      │
-│  Scanner    │                           │ JSON / HTML / CSV│
-└─────────────┘                           └────────┬─────────┘
-                                                   │
-                                                   ▼
-                                         ┌─────────────────┐
-                                         │   CI/CD Gate    │
-                                         │ Pass / Fail ≥ X │
-                                         └─────────────────┘
+```mermaid
+flowchart TD
+    A([Target URL]) --> B[Discovery Crawler]
+
+    B --> C[DAST Runner - ZAP]
+    C --> D[Parser & Normalizer - Dedup + Severity Mapping]
+    D --> E[Reporting - JSON / HTML / CSV]
+
+    F[Tomcat Hardening Scanner] --> E
+
+    E --> G[CI/CD Gate - Pass / Fail on Threshold]
 ```
 ---
 
