@@ -1,12 +1,20 @@
 name: Aysal Shield Security Scan
+# Default: Manual execution only (safe mode)
+# Uncomment triggers below to enable automated scanning (enterprise mode)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    - cron: '0 2 * * *'   # nightly at 02:00 UTC
+# Recommended for enterprise / production usage
+# Uncomment below to enable automatic scans
+
+# push:
+#   branches: [main]
+# pull_request:
+#   branches: [main]
+# schedule:
+#   - cron: '0 2 * * *'   # nightly at 02:00 UTC
+
+  # 👇 Default safe mode (manual only)
+  workflow_dispatch:
 
 env:
   ZAP_VERSION: "2.17.0"
